@@ -23,12 +23,6 @@ for ((i=0; i<${#Type[@]}; i++)); do
 
 			echo ${prepdir}/simu_${t}_${ID}_${n}
 
-			# generate annotation GTF for star alignment
-			if [[ ! -e ${prepdir}/simu_${t}_${ID}_${n}_annotation.gtf ]]; then
-				echo -e "\tWriting new annotation GTF file."
-				python3 ${codedir}/ExtractPCAnnotation.py ${prepdir}/simu_${t}_${ID}_${n}_reference.fa ${gtffile} ${prepdir}/simu_${t}_${ID}_${n}_annotation.gtf
-			fi
-
 			# Aligning reads to reference genome
 			if [[ ! -e ${prepdir}/Star/${t}_${ID}_${n}/Aligned.sortedByCoord.out.bam ]]; then
 				echo -e "\tAligning reads to reference genome"
