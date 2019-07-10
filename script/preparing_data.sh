@@ -1,7 +1,7 @@
 #!/bin/bash
 
 args=("$@")
-if [[ ${#args[@]} == 1 ]]; then
+if [[ ${#args[@]} == 0 ]]; then
 	echo "Usage: preparing_data.sh <output directory>"
 	exit
 fi
@@ -9,6 +9,9 @@ fi
 indir=$0
 indir=${indir%/*}
 outdir=$1
+
+echo "SADTEST CODE DIRECTORY: "${indir}
+echo "OUTPUT DIRECTORY: "${outdir}
 
 # download reference and build index
 if [[ ! -e ${outdir}/gencode.v26.annotation.gtf ]]; then
@@ -35,6 +38,9 @@ if [[ ! -e ${outdir}/gencode.v26.pc/hash.bin ]]; then
 fi
 if [[ ! -e ${outdir}/gencode.v26.Gene_Trans_Map.txt ]]; then
 	awk '{if($3=="transcript") print substr($10,2,length($10)-3)"\t"substr($12,2,length($12)-3)}' ${outdir}/gencode.v26.annotation.gtf > ${outdir}/gencode.v26.Gene_Trans_Map.txt
+fi
+if [[ ! -e ${outdir}/gencode.v26.RSEM/SA ]] || [[ ! -e ${outdir}/gencode.v26.RSEM/ref.idx.fa ]]; then
+	rsem-prepare-reference -p 8 --gtf ${outdir}/gencode.v26.annotation.gtf --transcript-to-gene-map ${outdir}/gencode.v26.Gene_Trans_Map.txt --star ${outdir}/GRCh38.p10.genome.fa ${outdir}/gencode.v26.RSEM/ref
 fi
 
 # extract protein-coding only transcript
