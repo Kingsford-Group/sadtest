@@ -1,17 +1,24 @@
 #!/bin/bash
 
-codedir=$0
-codedir=${codedir%/*}
+args=("$@")
+if [[ ${#args[@]} == 0 ]]; then
+	echo "Usage: preparing_data.sh <sad directory> <prepare data output directory>"
+	exit
+fi
 
-prepdir=$1
+scriptdir=$0
+scriptdir=${scriptdir%/*}
+codedir=$1
+prepdir=$2
 
-MetaFile="${codedir}/../data/GEUVADIS/Metadata.txt"
+MetaFile="${prepdir}/data/GEUVADIS/Metadata.txt"
 
 Type=("Full")
 GTFfiles=("${prepdir}/gencode.v26.annotation.gtf")
 TransFastas=("${prepdir}/gencode.v26.transcripts.fa")
 SalmonIndex=("${prepdir}/gencode.v26.full")
-ReadFolder="${codedir}/../data/GEUVADIS"
+RSEMIndex="${prepdir}/gencode.v26.RSEM/ref"
+ReadFolder="${prepdir}/data/GEUVADIS"
 OutDirectory="${prepdir}/GEUVADIS"
 SADFolder="sad"
 
@@ -27,10 +34,6 @@ i=0
 
 		((count++))
 		#if ((count<=0)) || ((count>6)); then
-		#	continue
-		#fi
-
-		#if ((count != 24)) && ((count != 30)); then
 		#	continue
 		#fi
 
@@ -52,14 +55,14 @@ i=0
 
 		# run SADpipe
 		if [[ ! -e ${prepdir}/salmon/${t}_${ID}_${n}/${SADFolder}/sad_unadjustable_pvalue.tsv ]]; then
-			python3 ${codedir}/SADpipe.py -t ${transfasta} -a ${gtffile} -s ${OutDirectory}/salmon_${t}_${ID}/ -o ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad
+			python3 ${codedir}/scripts/SADpipe.py -m 0 -t ${transfasta} -a ${gtffile} -s ${OutDirectory}/salmon_${t}_${ID}/ -o ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad
 		fi
 
 		# post-process SAD
 		if [[ -e ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue.tsv ]] && [[ ! -e ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue_sorted_uniqgene.tsv ]]; then
 			echo -e "\tpost-process SAD p values"
-			python3 ${codedir}/SortPValue.py 1 ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue.tsv ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue_sorted.tsv
-			python3 ${codedir}/Pred_Trans2Gene.py ${gtffile} ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue_sorted.tsv ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue_sorted_uniqgene.tsv
+			python3 ${codedir}/scripts/AdjustPValue.py 1 ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue.tsv ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue_sorted.tsv
+			python3 ${codedir}/scripts/Pred_Trans2Gene.py ${gtffile} ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue_sorted.tsv ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue_sorted_uniqgene.tsv
 		fi
 
 		# STAR alignment for transcriptome assembly
@@ -84,30 +87,32 @@ i=0
 		fi
 
 		# analysis: compare SAD and scallop
-		if [[ -e ${OutDirectory}/star_${t}_${ID}/scallopgenes.gtf ]] && [[ ! -e ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_pvalue_overall_scallopcomp2 ]]; then
+		if [[ -e ${OutDirectory}/star_${t}_${ID}/scallopgenes.gtf ]] && [[ ! -e ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_scallopcomp.txt ]]; then
 			echo -e "\tcomparing SAD and Scallop prediction"
-			python3 ${codedir}/FindSADpredinAssembly.py 1 ${gtffile} ${OutDirectory}/star_${t}_${ID}/scallopgenes.gtf ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue_sorted_uniqgene.tsv ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_pvalue_overall_scallopcomp
+			python3 ${codedir}/FindSADpredinAssembly.py 1 ${gtffile} ${OutDirectory}/star_${t}_${ID}/scallopgenes.gtf ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue_sorted.tsv ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_scallopcomp.txt
 		fi
 
 		# analysis: compare SAD and stringtie
-		if [[ -e ${OutDirectory}/star_${t}_${ID}/stringtiegenes.gtf ]] && [[ ! -e ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_pvalue_overall_stringtiecomp2 ]]; then
+		if [[ -e ${OutDirectory}/star_${t}_${ID}/stringtiegenes.gtf ]] && [[ ! -e ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_stringtiecomp.txt ]]; then
 			echo -e "\tcomparing SAD and StringTie prediction"
-			python3 ${codedir}/FindSADpredinAssembly.py 1 ${gtffile} ${OutDirectory}/star_${t}_${ID}/stringtiegenes.gtf ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue_sorted_uniqgene.tsv ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_pvalue_overall_stringtiecomp
+			python3 ${codedir}/FindSADpredinAssembly.py 1 ${gtffile} ${OutDirectory}/star_${t}_${ID}/stringtiegenes.gtf ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue_sorted.tsv ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_stringtiecomp.txt
 		fi
+
+
+		# About RSEM
+		# Run RSEM
+		if [[ ! -e ${OutDirectory}/rsem_${t}_${ID}/rsem.isoforms.results ]]; then
+			echo -e "\tquantifying using RSEM"
+			mkdir -p ${OutDirectory}/rsem_${t}_${ID}/
+			rsem-calculate-expression -p 4 --star --star-gzipped-read-file --estimate-rspd --paired-end ${read1} ${read2} ${RSEMIndex} ${OutDirectory}/rsem_${t}_${ID}/rsem
+		fi
+
+		# SAD for RSEM
+		if [[ ! -e ${OutDirectory}/rsem_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue.tsv ]]; then
+			python3 ${codedir}/scripts/SADpipe.py -m 1 -t ${transfasta} -a ${gtffile} -s ${OutDirectory}/rsem_${t}_${ID}/rsem -o ${OutDirectory}/rsem_${t}_${ID}/${SADFolder}/sad
+		fi
+			
 
 	done < ${MetaFile}
 #done
 
-# extracting number of reads per sample
-#ReadSumFile=${OutDirectory}/"ReadSummary.txt"
-#echo -e "# SampleID\tNumReads" > ${ReadSumFile}
-
-#while read -r line; do
-#	t=${Type[${i}]}
-#	read -ra x <<< ${line}
-#	ID=${x[${#x[@]}-1]}
-
-#	read -ra y <<< $(grep "total reads" ${OutDirectory}/salmon_${t}_${ID}/logs/salmon_quant.log)
-#	nreads=${y[5]}
-#	echo -e ${ID}"\t"${nreads} >> ${ReadSumFile}
-#done < ${MetaFile}

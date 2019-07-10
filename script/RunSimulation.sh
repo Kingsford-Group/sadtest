@@ -96,7 +96,7 @@ for ((i=0; i<${#Type[@]}; i++)); do
 
 			# run SADpipe
 			if [[ ! -e ${prepdir}/data/simulation/salmon/${t}_${ID}_${n}/${SADFolder}/sad_unadjustable_pvalue.tsv ]]; then
-				python3 ${codedir}/scripts/SADpipe.py -t ${prepdir}/data/simulation/simu_${t}_${ID}_${n}_reference.fa -a ${prepdir}/data/simulation/simu_${t}_${ID}_${n}_annotation.gtf -s ${prepdir}/data/simulation/salmon/${t}_${ID}_${n}/ -o ${prepdir}/data/simulation/salmon/${t}_${ID}_${n}/${SADFolder}/sad
+				python3 ${codedir}/scripts/SADpipe.py -m 0 -t ${prepdir}/data/simulation/simu_${t}_${ID}_${n}_reference.fa -a ${prepdir}/data/simulation/simu_${t}_${ID}_${n}_annotation.gtf -s ${prepdir}/data/simulation/salmon/${t}_${ID}_${n}/ -o ${prepdir}/data/simulation/salmon/${t}_${ID}_${n}/${SADFolder}/sad
 			fi
 
 			# sorting and adjust pvalues
