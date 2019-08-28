@@ -2,7 +2,9 @@
 
 args=("$@")
 if [[ ${#args[@]} == 0 ]]; then
-	echo "Usage: preparing_data.sh <sad directory> <prepare data output directory>"
+	echo "Usage: RunRealHumanBodyMap.sh <sad directory> <prepare data output directory>"
+	echo -e "\tsad code directory: the top directory of SAD that contains scripts and bin folder"
+	echo -e "\tprepare data output directory: the output directory specified when running prepare_data.sh, which will also be used as storing the output directory of this script."
 	exit
 fi
 

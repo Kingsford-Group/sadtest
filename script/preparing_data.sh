@@ -17,8 +17,8 @@ echo "OUTPUT DIRECTORY: "${outdir}
 if [[ ! -e ${outdir}/gencode.v26.annotation.gtf ]]; then
 	wget -O - ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_26/gencode.v26.annotation.gtf.gz | gunzip > ${outdir}/gencode.v26.annotation.gtf
 fi
-if [[ ! -e ${outdir}/GRCh38.p10.genome.fa ]]; then
-	wget -O - ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_26/GRCh38.p10.genome.fa.gz | gunzip > ${outdir}/GRCh38.p10.genome.fa
+if [[ ! -e ${outdir}/GRCh38.primary_assembly.genome.fa ]]; then
+	wget -O - ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_26/GRCh38.primary_assembly.genome.fa.gz | gunzip > ${outdir}/GRCh38.primary_assembly.genome.fa
 fi
 if [[ ! -e ${outdir}/gencode.v26.transcripts.fa ]]; then
 	wget -O - ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_26/gencode.v26.transcripts.fa.gz | gunzip > ${outdir}/gencode.v26.transcripts.fa
@@ -28,7 +28,7 @@ if [[ ! -e ${outdir}/gencode.v26.pc.transcripts.fa ]]; then
 fi
 if [[ ! -e ${outdir}/StarIndex/Genome ]]; then
 	mkdir -p ${outdir}/StarIndex
-	STAR --runThreadN 8 --runMode genomeGenerate --genomeDir ${outdir}/StarIndex/ --genomeFastaFiles GRCh38.p10.genome.fa && mv Log.out ${outdir}/StarIndex/
+	STAR --runThreadN 8 --runMode genomeGenerate --genomeDir ${outdir}/StarIndex/ --genomeFastaFiles GRCh38.primary_assembly.genome.fa && mv Log.out ${outdir}/StarIndex/
 fi
 if [[ ! -e ${outdir}/gencode.v26.full/hash.bin ]]; then
 	salmon index --gencode -t gencode.v26.transcripts.fa -i ${outdir}/gencode.v26.full
@@ -40,7 +40,7 @@ if [[ ! -e ${outdir}/gencode.v26.Gene_Trans_Map.txt ]]; then
 	awk '{if($3=="transcript") print substr($10,2,length($10)-3)"\t"substr($12,2,length($12)-3)}' ${outdir}/gencode.v26.annotation.gtf > ${outdir}/gencode.v26.Gene_Trans_Map.txt
 fi
 if [[ ! -e ${outdir}/gencode.v26.RSEM/SA ]] || [[ ! -e ${outdir}/gencode.v26.RSEM/ref.idx.fa ]]; then
-	rsem-prepare-reference -p 8 --gtf ${outdir}/gencode.v26.annotation.gtf --transcript-to-gene-map ${outdir}/gencode.v26.Gene_Trans_Map.txt --star ${outdir}/GRCh38.p10.genome.fa ${outdir}/gencode.v26.RSEM/ref
+	rsem-prepare-reference -p 8 --gtf ${outdir}/gencode.v26.annotation.gtf --transcript-to-gene-map ${outdir}/gencode.v26.Gene_Trans_Map.txt --star ${outdir}/GRCh38.primary_assembly.genome.fa ${outdir}/gencode.v26.RSEM/ref
 fi
 
 # extract protein-coding only transcript
