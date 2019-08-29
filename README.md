@@ -16,7 +16,8 @@ Both simulated reference transcriptome and simulated RNA-seq reads are generated
 
 ### Required software
 - Salmon [https://salmon.readthedocs.io/en/latest/](https://salmon.readthedocs.io/en/latest/)
-- polyester [https://github.com/alyssafrazee/polyester](https://github.com/alyssafrazee/polyester)
+- R
+- polyester (R package) [https://github.com/alyssafrazee/polyester](https://github.com/alyssafrazee/polyester)
 - python3
 
 ## GEUVADIS dataset
@@ -94,3 +95,42 @@ RunLongread.sh <sad directory> <prepare data output directory>
 
 
 # Analyzing and plotting
+
+### Requred software
+- python3
+- numpy (python3 package) [https://numpy.org/](https://numpy.org/)
+- pandas (python3 package) [https://pandas.pydata.org/](https://pandas.pydata.org/)
+- matplotlib (python3 package) [https://matplotlib.org/](https://matplotlib.org/)
+- R
+- ggplot2 (R package) [https://cran.r-project.org/web/packages/ggplot2/index.html](https://cran.r-project.org/web/packages/ggplot2/index.html)
+- cowplot (R package) [https://cran.r-project.org/web/packages/cowplot/index.html](https://cran.r-project.org/web/packages/cowplot/index.html)
+- DESeq2 (R package) [https://bioconductor.org/packages/release/bioc/html/DESeq2.html](https://bioconductor.org/packages/release/bioc/html/DESeq2.html)
+- readr (R package) [https://cran.r-project.org/web/packages/readr/index.html](https://cran.r-project.org/web/packages/readr/index.html)
+- tximport (R package) [https://bioconductor.org/packages/release/bioc/html/tximport.html](https://bioconductor.org/packages/release/bioc/html/tximport.html)
+- assertthat (R package) [https://cran.r-project.org/web/packages/assertthat/index.html](https://cran.r-project.org/web/packages/assertthat/index.html)
+
+### ploting the example coverage distributions
+To plot the example distributions in Figure 1, Figure 2 A-B, Supplementary Figure S12 -- S15, use python script `script/plot_examples.py`.
+```
+python3 plot_examples.py <prepare data directory> <figure output directory>
+```
+
+### plotting patterns of unadjustable anomalies
+To plot the patterns of the over-(under-) expressed region of common unadjustable anomalies, use `script/AnalyzeRealData_sharedtrans.py` to collect the common ones.
+```
+python3 AnalyzeRealData_sharedtrans.py <prepare data directory> <output directory>
+```
+And then, `script/plot_common_unadjustable.R` generates the plot in Figure 2 C-D and Supplementary Figure S9.
+```
+Rscript plot_common_unadjustable.R <output directory of AnalyzeRealData_sharedtrans.py> <output figure directory>
+```
+
+### count the number of DE transcripts and plot the expression
+some brief summary
+```
+Rscript plot_DE.R <prepare data directory> <output figure directory>
+```
+
+### plot the comparison result of simulated data
+
+### plot the overlap between unadjustable anomalies and long read transcripts

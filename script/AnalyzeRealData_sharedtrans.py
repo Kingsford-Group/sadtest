@@ -252,40 +252,38 @@ def WriteLengthSpanningExons(outputfile, InFolders, pvaluefilename, Transcripts,
 
 
 if __name__=="__main__":
-	Transcripts = ReadGTF("/home/cong/Documents/SADnewresult/gencode.v26.annotation.gtf")
-	[GeneTransMap, TransGeneMap] = Map_Gene_Trans(Transcripts)
-	InFolders = ["/home/cong/Documents/SADnewresult/GEUVADIS/", "/home/cong/Documents/SADnewresult/HumanBodyMap/"]
+	if len(sys.argv) == 1:
+		print("python3 AnalyzeRealData_sharedtrans.py <prepare data directory> <output directory>")
+	else:
+		prepdir = sys.argv[1]
+		outdir = sys.argv[2]
 
-	pvaluefilename = "test_pvalue_overall_sorted"
-	SharedTransList = GetSharedTranscripts(InFolders, pvaluefilename)
-	UnionTransList = GetUnionTranscripts(InFolders, pvaluefilename)
+		Transcripts = ReadGTF(prepdir + "/gencode.v26.annotation.gtf")
+		[GeneTransMap, TransGeneMap] = Map_Gene_Trans(Transcripts)
+		InFolders = [prepdir + "/GEUVADIS/", prepdir + "/HumanBodyMap/"]
 
-	# shared gene length vs all gene length distribution
-	if not Path("/home/cong/Documents/SADnewresult/SharedTrans_Length.txt").exists():
-		TransLength = GetTransLength(Transcripts)
-		WriteTransLengthTable("/home/cong/Documents/SADnewresult/SharedTrans_Length.txt", TransLength, SharedTransList, UnionTransList)
+		pvaluefilename = "sad_unadjustable_pvalue_sorted.tsv"
+		SharedTransList = GetSharedTranscripts(InFolders, pvaluefilename)
+		UnionTransList = GetUnionTranscripts(InFolders, pvaluefilename)
 
-	# number of spanning exons of the under-expression region for each corresponding isoform for each sample
-	if not Path("/home/cong/Documents/SADnewresult/SharedTrans_NumSpanningExons.txt").exists():
-		# pvaluefilename = "test_pvalue_overall_sorted_uniqgene"
-		pvaluefilename = "test_pvalue_overall_sorted"
-		WriteNumSpanningExons("/home/cong/Documents/SADnewresult/SharedTrans_NumSpanningExons.txt", InFolders, pvaluefilename, Transcripts, SharedTransList)
+		# shared gene length vs all gene length distribution
+		if not Path(outdir + "/SharedTrans_Length.txt").exists():
+			TransLength = GetTransLength(Transcripts)
+			WriteTransLengthTable(outdir + "/SharedTrans_Length.txt", TransLength, SharedTransList, UnionTransList)
 
-	# the start / end proportion in transcript length
-	if not Path("/home/cong/Documents/SADnewresult/SharedTrans_OverExpProportion.txt").exists():
-		TransLength = GetTransLength(Transcripts)
-		# pvaluefilename = "test_pvalue_overall_sorted_uniqgene"
-		pvaluefilename = "test_pvalue_overall_sorted"
-		WriteOverRegionProportion("/home/cong/Documents/SADnewresult/SharedTrans_OverExpProportion.txt", InFolders, pvaluefilename, TransLength, SharedTransList)
+		# number of spanning exons of the under-expression region for each corresponding isoform for each sample
+		if not Path(outdir + "/SharedTrans_NumSpanningExons.txt").exists():
+			WriteNumSpanningExons(outdir + "/SharedTrans_NumSpanningExons.txt", InFolders, pvaluefilename, Transcripts, SharedTransList)
+
+		# the start / end proportion in transcript length
+		if not Path(outdir + "/SharedTrans_OverExpProportion.txt").exists():
+			TransLength = GetTransLength(Transcripts)
+			WriteOverRegionProportion(outdir + "/SharedTrans_OverExpProportion.txt", InFolders, pvaluefilename, TransLength, SharedTransList)
 	
-	if not Path("/home/cong/Documents/SADnewresult/SharedTrans_UnderExpProportion.txt").exists():
-		TransLength = GetTransLength(Transcripts)
-		# pvaluefilename = "test_pvalue_overall_sorted_uniqgene"
-		pvaluefilename = "test_pvalue_overall_sorted"
-		WriteUnderRegionProportion("/home/cong/Documents/SADnewresult/SharedTrans_UnderExpProportion.txt", InFolders, pvaluefilename, TransLength, SharedTransList)
+		if not Path(outdir + "/SharedTrans_UnderExpProportion.txt").exists():
+			TransLength = GetTransLength(Transcripts)
+			WriteUnderRegionProportion(outdir + "/SharedTrans_UnderExpProportion.txt", InFolders, pvaluefilename, TransLength, SharedTransList)
 
-	# what is the exon length distribution of the omitting-exon of novel isoform
-	if not Path("/home/cong/Documents/SADnewresult/SharedTrans_ExonLengths.txt").exists():
-		# pvaluefilename = "test_pvalue_overall_sorted_uniqgene"
-		pvaluefilename = "test_pvalue_overall_sorted"
-		WriteLengthSpanningExons("/home/cong/Documents/SADnewresult/SharedTrans_ExonLengths.txt", InFolders, pvaluefilename, Transcripts, GeneTransMap, SharedTransList)
+		# what is the exon length distribution of the omitting-exon of novel isoform
+		if not Path(outdir + "/SharedTrans_ExonLengths.txt").exists():
+			WriteLengthSpanningExons(outdir + "/SharedTrans_ExonLengths.txt", InFolders, pvaluefilename, Transcripts, GeneTransMap, SharedTransList)
