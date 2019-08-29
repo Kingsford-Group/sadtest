@@ -36,6 +36,7 @@ Human reference genome GRCh38 with Gencode transcriptome annotation (version 26)
 - Salmon [https://salmon.readthedocs.io/en/latest/](https://salmon.readthedocs.io/en/latest/)
 - STAR [https://github.com/alexdobin/STAR](https://github.com/alexdobin/STAR)
 - RSEM [https://deweylab.github.io/RSEM/](https://deweylab.github.io/RSEM/)
+- eXpress [https://pachterlab.github.io/eXpress/index.html](https://pachterlab.github.io/eXpress/index.html)
 
 
 # Processing the data
@@ -110,7 +111,7 @@ RunLongread.sh <sad directory> <prepare data output directory>
 - assertthat (R package) [https://cran.r-project.org/web/packages/assertthat/index.html](https://cran.r-project.org/web/packages/assertthat/index.html)
 
 ### ploting the example coverage distributions
-To plot the example distributions in Figure 1, Figure 2 A-B, Supplementary Figure S12 -- S15, use python script `script/plot_examples.py`.
+To plot the example distributions in Figure 1, Figure 2 A-B, Supplementary Figure S12---S15, use python script `script/plot_examples.py`.
 ```
 python3 plot_examples.py <prepare data directory> <figure output directory>
 ```
@@ -120,17 +121,32 @@ To plot the patterns of the over-(under-) expressed region of common unadjustabl
 ```
 python3 AnalyzeRealData_sharedtrans.py <prepare data directory> <output directory>
 ```
-And then, `script/plot_common_unadjustable.R` generates the plot in Figure 2 C-D and Supplementary Figure S9.
+And then, `script/plot_common_unadjustable.R` generates the plot in Figure 2 C---D and Supplementary Figure S9.
 ```
 Rscript plot_common_unadjustable.R <output directory of AnalyzeRealData_sharedtrans.py> <output figure directory>
 ```
 
+### plot the overlap between Salmon anomalies and assembled transcripts, identifiability and RSEM anomalies
+The following script plots the overlap between SAD anomalies and assembled transcripts, RSEM anomalies, and eXpress identifiability, corresponding to Supplementary Figure S8, S10---S11.
+```
+Rscript plot_anomaly_overlap.R <prepare data directory> <output figure directory>
+```
+
 ### count the number of DE transcripts and plot the expression
-some brief summary
+The following script count the number of detected DE transcript under Salmon and under SAD-adjusted quantification on GEUVADIS samples. The outputs are: the count table in Table 1 and Supplementary Figure S6---S7.
 ```
 Rscript plot_DE.R <prepare data directory> <output figure directory>
 ```
 
 ### plot the comparison result of simulated data
+The following scripts plot the result of simulated data. Specifically, they generates Supplementary Figure S16, the comparison of predicting unannotated transcripts using unadjustable anomaly and transcriptome assemblers, the sensitivity of unannotated transcript prediction, and the comparison of quantification accuracy using SAD-adjusted and Salmon quantification of the adjustable anomalies.
+```
+python3 SADAnalysis_simusensitivity.py <prepare data directory>
+Rscript plot_simulated.R <prepare data directory> <output figure directory>
+```
 
 ### plot the overlap between unadjustable anomalies and long read transcripts
+The following plot shows Supplementary Figure S17, the percentage of unadjustable anomalies that have correspondences in long read alignment.
+```
+Rscript plot_longread.R <prepare data directory> <output figure directory>
+```

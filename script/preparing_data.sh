@@ -16,6 +16,7 @@ echo "OUTPUT DIRECTORY: "${outdir}
 # download reference and build index
 if [[ ! -e ${outdir}/gencode.v26.annotation.gtf ]]; then
 	wget -O - ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_26/gencode.v26.annotation.gtf.gz | gunzip > ${outdir}/gencode.v26.annotation.gtf
+	awk 'BEGIN{print "GeneName\tTransName"}{if($3=="transcript") print substr($10,2,length($10)-3)"\t"substr($12,2,length($12)-3)}' ${outdir}/gencode.v26.annotation.gtf > ${outdir}/gencode.v26.annotation.tx2gene.txt
 fi
 if [[ ! -e ${outdir}/GRCh38.primary_assembly.genome.fa ]]; then
 	wget -O - ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_26/GRCh38.primary_assembly.genome.fa.gz | gunzip > ${outdir}/GRCh38.primary_assembly.genome.fa
@@ -29,6 +30,10 @@ fi
 if [[ ! -e ${outdir}/StarIndex/Genome ]]; then
 	mkdir -p ${outdir}/StarIndex
 	STAR --runThreadN 8 --runMode genomeGenerate --genomeDir ${outdir}/StarIndex/ --genomeFastaFiles GRCh38.primary_assembly.genome.fa && mv Log.out ${outdir}/StarIndex/
+fi
+if [[ ! -e ${outdir}/gencode.v26.StarIndex/SA ]]; then
+	mkdir -p ${outdir}/gencode.v26.StarIndex
+	STAR --runThreadN 8 --runMode genomeGenerate --genomeDir ${outdir}/gencode.v26.StarIndex/ --genomeFastaFiles ${outdir}/gencode.v26.transcripts.fa --limitGenomeGenerateRAM 139337601749 && mv Log.out ${outdir}/gencode.v26.StarIndex/
 fi
 if [[ ! -e ${outdir}/gencode.v26.full/hash.bin ]]; then
 	salmon index --gencode -t gencode.v26.transcripts.fa -i ${outdir}/gencode.v26.full

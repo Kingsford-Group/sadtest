@@ -19,6 +19,8 @@ Type=("Full")
 GTFfiles=("${prepdir}/gencode.v26.annotation.gtf")
 TransFastas=("${prepdir}/gencode.v26.transcripts.fa")
 SalmonIndex=("${prepdir}/gencode.v26.full")
+StarIndex=("${prepdir}/StarIndex")
+StarTransIndex=("${prepdir}/gencode.v26.StarIndex")
 RSEMIndex="${prepdir}/gencode.v26.RSEM/ref"
 ReadFolder="${prepdir}/data/HumanBodyMap"
 OutDirectory="${prepdir}/HumanBodyMap"
@@ -32,6 +34,8 @@ i=0
 	gtffile=${GTFfiles[${i}]}
 	transfasta=${TransFastas[${i}]}
 	salmonindex=${SalmonIndex[${i}]}
+	starindex=${StarIndex[${i}]}
+	startransindex=${StarTransIndex[${i}]}
 	for ID in $(cut -d$'\t' -f10 ${MetaFile}); do
 		((count++))
 		#if ((count<=1)); then
@@ -68,7 +72,7 @@ i=0
 		if [[ ! -e ${OutDirectory}/star_${t}_${ID}/Aligned.sortedByCoord.out.bam ]]; then
 			mkdir -p ${OutDirectory}/star_${t}_${ID}/
 			echo -e "\tSTAR aligning"
-			STAR --runThreadN 4 --genomeDir ${prepdir}/StarIndex/ --readFilesIn ${read1} ${read2} --readFilesCommand gunzip -c --outFileNamePrefix ${OutDirectory}/star_${t}_${ID}/ --outSAMtype BAM SortedByCoordinate --outSAMstrandField intronMotif --chimSegmentMin 15 --sjdbGTFfile ${gtffile}
+			STAR --runThreadN 4 --genomeDir ${starindex} --readFilesIn ${read1} ${read2} --readFilesCommand gunzip -c --outFileNamePrefix ${OutDirectory}/star_${t}_${ID}/ --outSAMtype BAM SortedByCoordinate --outSAMstrandField intronMotif --chimSegmentMin 15 --sjdbGTFfile ${gtffile}
 		fi
 
 		# transcriptome assembly: Scallop
@@ -92,7 +96,7 @@ i=0
 		fi
 
 		# analysis: compare SAD and stringtie
-		if [[ -e ${OutDirectory}/star_${t}_${ID}/stringtiegenes.gtf ]] && [[ ! -e ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad__unadjustable_stringtiecomp.txt ]]; then
+		if [[ -e ${OutDirectory}/star_${t}_${ID}/stringtiegenes.gtf ]] && [[ ! -e ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_stringtiecomp.txt ]]; then
 			echo -e "\tcomparing SAD and StringTie prediction"
 			python3 ${codedir}/FindSADpredinAssembly.py 1 ${gtffile} ${OutDirectory}/star_${t}_${ID}/stringtiegenes.gtf ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue_sorted.tsv ${OutDirectory}/salmon_${t}_${ID}/${SADFolder}/sad_unadjustable_stringtiecomp.txt
 		fi
@@ -109,6 +113,27 @@ i=0
 		# SAD for RSEM
 		if [[ ! -e ${OutDirectory}/rsem_${t}_${ID}/${SADFolder}/sad_unadjustable_pvalue.tsv ]]; then
 			python3 ${codedir}/scripts/SADpipe.py -m 1 -t ${transfasta} -a ${gtffile} -s ${OutDirectory}/rsem_${t}_${ID}/rsem -o ${OutDirectory}/rsem_${t}_${ID}/${SADFolder}/sad
+		fi
+
+
+		# Identifiability using eXpress
+		# star alignment onto the transcript index
+		if [[ ! -e ${OutDirectory}/star_transcript_${t}_${ID}/Aligned.sortedByCoord.out.bam ]]; then
+			echo "STAR transcriptome aligning..."
+			mkdir -p ${OutDirectory}/star_transcript_${t}_${ID}
+			STAR --runThreadN 4 --genomeDir ${startransindex} --readFilesIn ${read1} ${read2} --readFilesCommand gunzip -c --outFileNamePrefix ${OutDirectory}/star_transcript_${t}_${ID}/ --outSAMtype BAM SortedByCoordinate --outSAMstrandField intronMotif --outFilterMultimapScoreRange 0 --outFilterMultimapNmax 100
+		fi
+
+		# sort by read name
+		if [[ ! -e ${OutDirectory}/star_transcript_${t}_${ID}/Aligned.sortedByName.out.bam ]]; then
+			echo "SORTING by read name..."
+			samtools sort -n ${OutDirectory}/star_transcript_${t}_${ID}/Aligned.sortedByCoord.out.bam -o ${OutDirectory}/star_transcript_${t}_${ID}/Aligned.sortedByName.out.bam
+		fi
+
+		# run eXpress
+		if [[ ! -e ${OutDirectory}/star_transcript_${t}_${ID}/results.xprs ]]; then
+			echo "RUNNING eXpress..."
+			express -o ${OutDirectory}/star_transcript_${t}_${ID}/ ${transfasta} ${OutDirectory}/star_transcript_${t}_${ID}/Aligned.sortedByName.out.bam
 		fi
 
 	done
